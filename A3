@@ -1,0 +1,95 @@
+package com.example.Main;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Scanner;
+
+public class A3 {
+    public static void main(String[] args) {
+        ArrayList<Integer> list = new ArrayList<Integer>();
+        Scanner sc = new Scanner(System.in);
+        
+        while (true) {
+            // Note: The menu string in the image ends at option 4, 
+            // but the code contains cases up to 6.
+            System.out.println("\n----Menu---\n1. Adding elements\n2. Sorting elements\n3. Replace an element with another\n4. Removing an element\n5. Display elements\n6. Insert between elements");
+            
+            switch (sc.nextInt()) {
+                case 1:
+                    System.out.println("\nEnter element: ");
+                    list.add(sc.nextInt());
+                    System.out.println("\nElement added successfully\n");
+                    break;
+
+                case 2:
+                    Collections.sort(list);
+                    System.out.println("List sorted successfully");
+                    break;
+
+                case 3:
+                    if (list.size() <= 0) {
+                        System.out.println("\nInsufficient number of elements");
+                    } else {
+                        System.out.println("\nEnter old and new element: ");
+                        int oldVal = sc.nextInt();
+                        int newVal = sc.nextInt();
+                        if (Collections.replaceAll(list, oldVal, newVal)) {
+                            System.out.println("Elements replaced successfully");
+                        } else {
+                            System.out.printf("%d not found in given list\n", oldVal);
+                        }
+                    }
+                    break;
+
+                case 4:
+                    System.out.println("Enter the element to be removed: ");
+                    Integer element = sc.nextInt();
+                    if (list.remove(element)) {
+                        System.out.printf("\n%d removed from the list\n", element);
+                    } else {
+                        System.out.printf("\n%d not found in the list\n", element);
+                    }
+                    break;
+
+                case 5:
+                    if (list.isEmpty()) {
+                        System.out.println("List is empty\n");
+                    } else {
+                        System.out.println("\nList elements are: \n");
+                        Iterator<Integer> itr = list.iterator();
+                        while (itr.hasNext()) {
+                            System.out.printf("%d ", itr.next());
+                        }
+                        System.out.println();
+                    }
+                    break;
+
+                case 6:
+                    if (list.size() < 2) {
+                        System.out.println("\nInsuffiencient elements\n");
+                    } else {
+                        System.out.println("\nEnter starting and ending element: ");
+                        int sidx, eidx, indx;
+                        sidx = list.indexOf(sc.nextInt());
+                        eidx = list.indexOf(sc.nextInt());
+                        
+                        if (sidx == -1 || eidx == -1) {
+                            System.out.println("\nEither element not found in list\n");
+                        } else if (sidx == eidx) {
+                            System.out.println("Both element reside at same index\n");
+                        } else {
+                            indx = eidx < sidx ? sidx : eidx;
+                            System.out.println("\nEnter new element: ");
+                            list.add(indx, sc.nextInt());
+                            System.out.printf("\nElement is added at index %d\n", eidx);
+                        }
+                    }
+                    break;
+
+                default:
+                    return;
+            }
+        }
+    }
+}
