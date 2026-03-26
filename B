@@ -1,0 +1,121 @@
+//Write a menu-driven Java program using JDBC and PreparedStatement to perform
+//Insert, Delete, Update, and Display operations on a Product table with fields:
+//ProdId, ProdName, Price, Quantity
+
+
+
+public class DataBaseExample {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            Connection con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/javadb?zeroDateTimeBehavior=CONVERT_TO_NULL",
+                    "root",
+                    ""
+            );
+
+            while (true) {
+                System.out.println("\nMENU");
+                System.out.println("1. Insert Product");
+                System.out.println("2. Delete Product");
+                System.out.println("3. Update Price");
+                System.out.println("4. Display Products");
+                System.out.println("5. Exit");
+
+                System.out.print("Enter choice: ");
+                int ch = sc.nextInt();
+
+                switch (ch) {
+
+                    case 1:
+                        System.out.print("Product ID: ");
+                        int id = sc.nextInt();
+                        sc.nextLine();
+
+                        System.out.print("Name: ");
+                        String name = sc.nextLine();
+
+                        System.out.print("Price: ");
+                        double price = sc.nextDouble();
+
+                        System.out.print("Quantity: ");
+                        int qty = sc.nextInt();
+
+                        String insert = "INSERT INTO Product VALUES (?, ?, ?, ?)";
+
+                        PreparedStatement ps1 = con.prepareStatement(insert);
+
+                        ps1.setInt(1, id);
+                        ps1.setString(2, name);
+                        ps1.setDouble(3, price);
+                        ps1.setInt(4, qty);
+
+                        ps1.executeUpdate();
+                        System.out.println("Product Inserted!");
+                        break;
+
+                    case 2:
+                        System.out.print("Enter Product ID to delete: ");
+                        int del = sc.nextInt();
+
+                        String delete = "DELETE FROM Product WHERE ProdId=?";
+                        PreparedStatement ps2 = con.prepareStatement(delete);
+
+                        ps2.setInt(1, del);
+                        ps2.executeUpdate();
+
+                        System.out.println("Product Deleted!");
+                        break;
+
+                    case 3:
+                        System.out.print("Enter Product ID: ");
+                        int up = sc.nextInt();
+
+                        System.out.print("New Price: ");
+                        double newPrice = sc.nextDouble();
+
+                        String update = "UPDATE Product SET Price=? WHERE ProdId=?";
+
+                        PreparedStatement ps3 = con.prepareStatement(update);
+
+                        ps3.setDouble(1, newPrice);
+                        ps3.setInt(2, up);
+
+                        if(ps3.executeUpdate()>0)
+                            System.out.println("Price Updated!");
+                        else
+                            System.out.println("Id not found");
+                        break;
+
+                    case 4:
+                        String query = "SELECT * FROM Product";
+                        PreparedStatement ps4 = con.prepareStatement(query);
+
+                        ResultSet rs = ps4.executeQuery();
+
+                        System.out.println("\n--- Product List ---\nProductId\tName\tPrice\tQuantity\n");
+                        while (rs.next()) {
+                            System.out.printf("%d\t%s\t%.2f\t%d\n",rs.getInt("ProdId"),rs.getString("ProdName"),rs.getDouble("Price"),rs.getInt("Quantity"));
+                        }
+                        break;
+
+                    case 5:
+                        con.close();
+                        System.out.println("Exited!");
+                        return;
+
+                    default:
+                        System.out.println("Invalid Choice!");
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
