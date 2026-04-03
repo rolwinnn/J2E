@@ -1,0 +1,117 @@
+import java.sql.*;
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String[] args) throws ClassNotFoundException, SQLException {
+        Scanner sc = new Scanner(System.in);
+        Connection con;
+        PreparedStatement stmt;
+        ResultSet rs;
+        String accno, name, adrs;
+        float amt;
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3306/javadb?zeroDateTimeBehavior=CONVERT_TO_NULL", "root", "");
+        
+        while (true) {
+            try {
+                System.out.println("MENU\n 1. Add new Account Holder information.\n 2. Amount Deposit\n 3. Amount Withdrawal (Maintain minimum balance 500 Rs)\n 4. Display all information\n 5. Exit\n Enter your choice: ");
+                
+                switch (sc.nextInt()) {
+                    case 1:
+                        System.out.println("Enter Account number, name, adrs and initial deposite amount(Minimum 500): ");
+                        accno = sc.next();
+                        name = sc.next();
+                        sc.nextLine();
+                        adrs = sc.nextLine();
+                        amt = sc.nextFloat();
+                        if (amt < 500)
+                            System.out.println("Minimum amount should be 500");
+                        else {
+                            stmt = con.prepareStatement("Insert into bank values(?,?,?,?)");
+                            stmt.setString(1, accno);
+                            stmt.setString(2, name);
+                            stmt.setString(3, adrs);
+                            stmt.setFloat(4, amt);
+                            stmt.executeUpdate();
+                            System.out.println("Account created successfully");
+                        }
+                        break;
+                        
+                    case 2:
+                        System.out.println("Enter account number and amount to be deposited: ");
+                        accno = sc.next();
+                        amt = sc.nextFloat();
+                        if (amt < 1)
+                            System.out.println("Amount should be positive number");
+                        else {
+                            stmt = con.prepareStatement("update bank set bal=bal+? where accno=?");
+                            stmt.setFloat(1, amt);
+                            stmt.setString(2, accno);
+                            if (stmt.executeUpdate() > 0)
+                                System.out.println("Amount deposited successfully");
+                            else
+                                System.out.println("Account not found");
+                        }
+                        break;
+                        
+                    case 3:
+                        System.out.println("Enter the account number and amount to be withdrawn: ");
+                        accno = sc.next();
+                        amt = sc.nextFloat();
+                        stmt = con.prepareStatement("select bal from bank where accno=?");
+                        stmt.setString(1, accno);
+                        rs = stmt.executeQuery();
+                        if (rs.next()) {
+                            float tempbal = rs.getFloat(1) - amt;
+                            if (tempbal < 500)
+                                System.out.println("Maintain minimum balance...");
+                            else {
+                                stmt = con.prepareStatement("update bank set bal=? where accno=?");
+                                stmt.setFloat(1, tempbal);
+                                stmt.setString(2, accno);
+                                stmt.executeUpdate();
+                                System.out.println("Amount withdrawn successfully");
+                            }
+                        } else
+                            System.out.println("Account number not found");
+                        break;
+                        
+                    case 4:
+                        System.out.println("Enter account number: ");
+                        accno = sc.next();
+                        stmt = con.prepareStatement("Select * from bank where accno=?");
+                        stmt.setString(1, accno);
+                        rs = stmt.executeQuery();
+                        if (rs.next()) {
+                            System.out.printf("------Account information---------\nAccount number: %s\nName: %s\nAddrss: %s\nBalance: %f", rs.getString(1), rs.getString(2), rs.getString(3), rs.getFloat(4));
+                        } else {
+                            System.out.println("Account number not found\n");
+                        }
+                        break;
+                        
+                    case 5:
+                        return;
+                }
+            } catch (SQLIntegrityConstraintViolationException e1) {
+                System.out.println("Account number already exists");
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+    }
+}
+
+
+MENU
+1. Add new Account Holder information.
+2. Amount Deposit
+3. Amount Withdrawal (Maintain minimum balance 500 Rs)
+4. Display all information
+5. Exit
+
+# Name    Type
+1 accno   varchar(10)
+2 name    varchar(20)
+3 adrs    varchar(20)
+4 bal     float
