@@ -26,5 +26,10 @@ public class FileDownload extends HttpServlet {
     }finally{}
     }
 }
+//Note:
+//1. Write only highlighted code inside servelets processRequestMethod
+//2. Remove PrintWriter out=response.getWriter()
+//3. Remove out.println() inside finally block.
+//4. Save text file in yourprojectfolder->web->filename
 
 
