@@ -1,0 +1,136 @@
+-------Index.html------
+
+<html>
+<body>
+    <h1>Add new employee</h1><br>
+    <form action="Save Employee">
+        <pre>
+            Employee Name: <input type="text" name="name"><br>
+            Password: <input type="password" name="password"><br>
+            Email: <input type="email" name="email"><br>
+            Country: 
+            <select name="country">
+                <option value="India">India</option>
+                <option value="Russia">Russia</option>
+                <option value="China">China</option>
+            </select><br>
+            <input type="submit" name="submit" value="Save"><br>
+            <a href="ViewEmployee">View Employee</a>
+        </pre>
+    </form>
+</body>
+</html>
+
+-----------EmployeeModel.java------------
+import java.sql.*;
+
+public class EmployeeModel {
+    static Connection con;
+    static PreparedStatement stmt;
+
+    static {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/javadb", "root", "");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public static int saveEmployee(String name, String password, String email, String country, String id) throws Exception {
+        if (id == null) {
+            stmt = con.prepareStatement("Insert into employee values (null, ?, ?, ?,?)");
+        } else {
+            stmt = con.prepareStatement("update employee set name=?, password=?, email=?, country=? where id=?");
+            stmt.setString(5, id);
+        }
+        stmt.setString(1, name);
+        stmt.setString(2, password);
+        stmt.setString(3, email);
+        stmt.setString(4, country);
+        return stmt.executeUpdate();
+    }
+
+    public static ResultSet getEmployee(String id) throws Exception {
+        if (id == null) {
+            stmt = con.prepareStatement("select * from employee");
+        } else {
+            stmt = con.prepareStatement("select * from employee where id=?");
+            stmt.setString(1, id);
+        }
+        return stmt.executeQuery();
+    }
+}
+
+------------SaveEmployee.java (Servlet Logic)-------------  inside processRequest
+PrintWriter out = response.getWriter();
+try {
+    String name, password, email, country, id;
+    name = request.getParameter("name");
+    password = request.getParameter("password");
+    email = request.getParameter("email");
+    country = request.getParameter("country");
+    id = request.getParameter("id");
+    
+    EmployeeModel.saveEmployee(name, password, email, country, id);
+    response.sendRedirect("ViewEmployee");
+} catch (Exception e) {
+    out.println(e);
+}
+
+------------ViewEmployee.java (Servlet Logic)--------------- inside processRequest
+PrintWriter out = response.getWriter();
+try {
+    ResultSet res = EmployeeModel.getEmployee(null);
+    out.println("<table border=1px>"
+        + "<tr>"
+        + "<th>ID</th>"
+        + "<th>Name</th>"
+        + "<th>Password</th>"
+        + "<th>Email</th>"
+        + "<th>Country</th>"
+        + "<th>Edit</th>"
+        + "</tr>");
+        
+    while (res.next()) {
+        out.print("<tr>"
+            + "<td>" + res.getInt(1) + "</td>"
+            + "<td>" + res.getString(2) + "</td>"
+            + "<td>" + res.getString(3) + "</td>"
+            + "<td>" + res.getString(4) + "</td>"
+            + "<td>" + res.getString(5) + "</td>"
+            + "<td><a href=EditEmployee?id=" + res.getInt(1) + ">Edit</a></td>"
+            + "</tr>");
+    }
+    out.print("</table><br><a href=index.html>Go to Home page</a>");
+} catch (Exception e) {
+    out.println(e);
+}
+
+-----------EditEmployee.java (Servlet Logic)------------- inside processRequest
+PrintWriter out = response.getWriter();
+try {
+    String id = request.getParameter("id");
+    ResultSet row = EmployeeModel.getEmployee(id);
+    row.next();
+    
+    ArrayList<String> countryList = new ArrayList<String>(Arrays.asList("India", "China", "Russia"));
+    String country = row.getString(5);
+    countryList.remove(country);
+    
+    out.println("<h1>Update Employee</h1>"
+        + "<form action=SaveEmployee><pre>"
+        + "<input type=hidden name=id value=" + row.getString(1) + "><br>"
+        + "Name : <input type=text name=name value='" + row.getString(2) + "'><br>"
+        + "Password <input type=password name=password value=" + row.getString(3) + "><br>"
+        + "Email : <input type=email name=email value=" + row.getString(4) + "><br>"
+        + "Country <select name=country>"
+        + "<option value=" + country + " selected>" + country + "</option>");
+        
+    for (String c : countryList) {
+        out.print("<option value=" + c + ">" + c + "</option>");
+    }
+    out.println("</select></br><input type=submit value=Update></pre></form>");
+} catch (Exception e) {
+    out.println(e);
+}
