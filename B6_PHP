@@ -1,0 +1,175 @@
+<?php
+// DATABASE CONNECTION
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "customer";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $database);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// 1. ADD CUSTOMER INFORMATION
+if (isset($_POST['add_customer'])) {
+    $customer_number = $_POST['customer_number'];
+    $customer_name = $_POST['customer_name'];
+    $item_purchased = $_POST['item_purchased'];
+    $mobile_number = $_POST['mobile_number'];
+
+    // Validation checks
+    if (strlen($mobile_number) != 10 || !is_numeric($mobile_number)) {
+        echo "Error: Mobile Number should be 10 digits.";
+    } else {
+        $sql = "INSERT INTO customerdetails (Customer_Number, Customer_Name, Item_Purchased, Mobile_Number) 
+                VALUES ('$customer_number', '$customer_name', '$item_purchased', '$mobile_number')";
+        
+        if ($conn->query($sql) === TRUE) {
+            echo "New Record created Successfully!<br>";
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    }
+}
+
+// 2. DELETE CUSTOMER RECORD
+if (isset($_POST['delete_customer'])) {
+    $customer_number = $_POST['delete_customer_number'];
+    
+    $sql = "DELETE FROM customerdetails WHERE Customer_Number = '$customer_number'";
+    
+    // MISTAKE: Your notes skipped executing the query before checking affected_rows. I added the execution step here.
+    $conn->query($sql);
+
+    if ($conn->affected_rows > 0) {
+        echo "Customer Deleted Successfully!<br>";
+    } else {
+        echo "Customer ID Not found!<br>";
+    }
+}
+
+// 3. SEARCH FOR PARTICULAR ENTRIES
+if (isset($_POST['search'])) {
+    $customer_number = $_POST['search_customer_number'];
+    
+    $sql = "SELECT * FROM customerdetails WHERE Customer_Number = '$customer_number'";
+    $result = $conn->query($sql);
+    
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            echo "Customer Number: " . $row["Customer_Number"] . " - Customer Name: " . $row["Customer_Name"] . " - Item Purchased: " . $row["Item_Purchased"] . " - Mobile Number: " . $row["Mobile_Number"] . "<br>";
+        }
+    } else {
+        echo "No data found: 0 results<br>";
+    }
+}
+
+// 4. SORT DATABASE BASED ON CUSTOMER ID
+if (isset($_POST['sort'])) {
+    $sql = "SELECT * FROM customerdetails ORDER BY Customer_Number";
+    $result = $conn->query($sql);
+    
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            echo "Customer Number: " . $row["Customer_Number"] . " - Customer Name: " . $row["Customer_Name"] . " - Item Purchased: " . $row["Item_Purchased"] . " - Mobile Number: " . $row["Mobile_Number"] . "<br>";
+        }
+    } else {
+        echo "0 results<br>";
+    }
+}
+
+// 5. DISPLAY COMPLETE SET OF RECORDS
+if (isset($_POST['display_all'])) {
+    $sql = "SELECT * FROM customerdetails";
+    $result = $conn->query($sql);
+    
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            echo "Customer Number: " . $row["Customer_Number"] . " - Customer Name: " . $row["Customer_Name"] . " - Item Purchased: " . $row["Item_Purchased"] . " - Mobile Number: " . $row["Mobile_Number"] . "<br>";
+        }
+    } else {
+        echo "0 results<br>";
+    }
+}
+
+$conn->close();
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Application</title>
+    <script>
+        function toggleForm(formId) {
+            // Hide all forms first
+            document.getElementById('addForm').style.display = 'none';
+            document.getElementById('deleteForm').style.display = 'none';
+            document.getElementById('searchForm').style.display = 'none';
+            document.getElementById('sortForm').style.display = 'none';
+            document.getElementById('displayForm').style.display = 'none';
+            
+            // Show the specific form requested
+            document.getElementById(formId).style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+
+    <h2>Customer Information System</h2>
+    
+    <button onclick="toggleForm('addForm')">Add Customer Information</button>
+    <button onclick="toggleForm('deleteForm')">Delete Customer Records</button>
+    <button onclick="toggleForm('searchForm')">Search for Particular Entries</button>
+    <button onclick="toggleForm('sortForm')">Sort Database</button>
+    <button onclick="toggleForm('displayForm')">Display Complete Set</button>
+
+    <hr>
+
+    <div id="addForm" style="display:none;">
+        <h3>Add Customer Information</h3>
+        <form method="post" action="">
+            Customer Number: <input type="text" name="customer_number" required><br><br>
+            Customer Name: <input type="text" name="customer_name" required><br><br>
+            Item Purchased: <input type="text" name="item_purchased" required><br><br>
+            Mobile Number: <input type="text" name="mobile_number" required><br><br>
+            <input type="submit" name="add_customer" value="Add Customer">
+        </form>
+    </div>
+
+    <div id="deleteForm" style="display:none;">
+        <h3>Delete Customer Record</h3>
+        <form method="post" action="">
+            Enter Customer Number to Delete: <input type="text" name="delete_customer_number" required><br><br>
+            <input type="submit" name="delete_customer" value="Delete Customer">
+        </form>
+    </div>
+
+    <div id="searchForm" style="display:none;">
+        <h3>Search for Customer</h3>
+        <form method="post" action="">
+            Enter Customer Number to Search: <input type="text" name="search_customer_number" required><br><br>
+            <input type="submit" name="search" value="Search">
+        </form>
+    </div>
+
+    <div id="sortForm" style="display:none;">
+        <h3>Sort Database</h3>
+        <form method="post" action="">
+            <p>Click below to sort records by Customer Number.</p>
+            <input type="submit" name="sort" value="Sort Records">
+        </form>
+    </div>
+
+    <div id="displayForm" style="display:none;">
+        <h3>Display All Records</h3>
+        <form method="post" action="">
+            <p>Click below to show all customers in the database.</p>
+            <input type="submit" name="display_all" value="Display All">
+        </form>
+    </div>
+
+</body>
+</html>
